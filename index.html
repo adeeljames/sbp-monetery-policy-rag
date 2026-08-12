@@ -395,16 +395,43 @@
 
     <div class="footer">
         <div class="footer-content">
-            <p>Made with ❤️ by <a href="https://www.linkedin.com/in/muhammad-adil-ai" target="_blank">@muhammadadeelai</a></p>
+            <p>Made with ❤️ by <a href="https://www.linkedin.com/in/muhammadadeelai/" target="_blank" rel="noopener noreferrer">@muhammadadeelai</a></p>
             <p>Built with FastAPI, Docling, Cohere, Qdrant, Groq & LangChain</p>
         </div>
     </div>
 
     <script>
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? 'http://localhost:8000' 
-            : 'https://sbp-mpr.onrender.com/'; // Replace with your Render backend URL
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8000'
+            : 'https://sbp-mpr.onrender.com';
         let isLoading = false;
+        const SESSION_ID_KEY = 'sbp_mpr_session_id';
+        const sessionId = getOrCreateSessionId();
+
+        function getOrCreateSessionId() {
+            try {
+                const existing = localStorage.getItem(SESSION_ID_KEY);
+                if (existing) return existing;
+
+                const id = (window.crypto && crypto.randomUUID)
+                    ? crypto.randomUUID()
+                    : 'web-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+
+                localStorage.setItem(SESSION_ID_KEY, id);
+                return id;
+            } catch (error) {
+                return 'web-' + Date.now();
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         function handleKeyPress(event) {
             if (event.key === 'Enter' && !isLoading) {
@@ -429,16 +456,27 @@
             const loadingId = addLoadingMessage();
 
             try {
-                const response = await fetch(`${API_URL}/chat`, {
+                const response = await fetch(new URL('/chat', API_URL).toString(), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ question: message }),
+                    body: JSON.stringify({
+                        question: message,
+                        session_id: sessionId
+                    }),
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to get response');
+                    let errorDetails = '';
+                    try {
+                        const errorData = await response.json();
+                        errorDetails = errorData.detail ? JSON.stringify(errorData.detail) : JSON.stringify(errorData);
+                    } catch (_) {
+                        errorDetails = await response.text().catch(() => '');
+                    }
+                    throw new Error(`HTTP ${response.status}${errorDetails ? ': ' + errorDetails : ''}`);
                 }
 
                 const data = await response.json();
@@ -447,11 +485,19 @@
                 removeMessage(loadingId);
 
                 // Add assistant response
-                addAssistantMessage(data.answer, data.sources, data.query_type);
+                addAssistantMessage(
+                    data.answer || 'No answer was returned by the API.',
+                    Array.isArray(data.sources) ? data.sources : [],
+                    data.query_type || 'RAG'
+                );
 
             } catch (error) {
                 removeMessage(loadingId);
-                addMessage('Sorry, there was an error processing your request. Please try again.', 'assistant');
+                addMessage(
+                    `Sorry, I could not get a response from the backend. ${error.message}`,
+                    'assistant'
+                );
+                console.error('Chat request failed:', error);
             } finally {
                 isLoading = false;
                 document.getElementById('sendButton').disabled = false;
@@ -474,15 +520,20 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message assistant';
             
-            let html = `<span class="query-type">${queryType}</span>`;
-            html += content;
+            let html = `<span class="query-type">${escapeHtml(queryType)}</span>`;
+            html += `<div>${escapeHtml(content).replace(/\n/g, '<br>')}</div>`;
             
             if (sources && sources.length > 0) {
                 html += '<div class="message-sources">';
                 html += '<strong>Sources:</strong>';
                 html += '<ul>';
                 sources.forEach(source => {
-                    html += `<li>${source}</li>`;
+                    const text = String(source ?? '');
+                    const safe = escapeHtml(text);
+                    const hrefMatch = text.match(/^https?:\/\/\S+$/i);
+                    html += hrefMatch
+                        ? `<li><a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a></li>`
+                        : `<li>${safe}</li>`;
                 });
                 html += '</ul></div>';
             }
@@ -520,9 +571,16 @@
 
         async function clearHistory() {
             try {
-                await fetch(`${API_URL}/clear-history`, {
+                const response = await fetch(new URL('/clear-history', API_URL).toString(), {
                     method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 
                 const messagesContainer = document.getElementById('chatMessages');
                 messagesContainer.innerHTML = `
