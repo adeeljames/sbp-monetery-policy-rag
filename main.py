@@ -37,7 +37,8 @@ llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=GROQ_API_
 co = cohere.Client(COHERE_API_KEY)
 
 # Connect to existing Qdrant collection
-vector_store = QdrantVectorStore(
+# Connect to existing Qdrant collection
+vector_store = QdrantVectorStore.from_existing_collection(
     embedding=dense_embeddings,
     sparse_embedding=sparse_embeddings,
     url=QDRANT_URL,
