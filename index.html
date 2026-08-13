@@ -1,601 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SBP Monetary Policy RAG Chatbot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo-icon {
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            juStify-content: center;
-            font-size: 24px;
-        }
-
-        .logo-text h1 {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .logo-text p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.875rem;
-        }
-
-        .made-with-love {
-            color: white;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .main-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-        }
-
-        .chat-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            width: 100%;
-            max-width: 900px;
-            height: 70vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .chat-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 1.5rem;
-            color: white;
-        }
-
-        .chat-header h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .chat-header p {
-            font-size: 0.875rem;
-            opacity: 0.9;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 1rem 1.25rem;
-            border-radius: 16px;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message.user {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.assistant {
-            background: #f3f4f6;
-            color: #1f2937;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-
-        .message-sources {
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 0.75rem;
-            opacity: 0.9;
-        }
-
-        .message.assistant .message-sources {
-            border-top-color: #e5e7eb;
-        }
-
-        .message-sources strong {
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .message-sources ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .message-sources li {
-            padding-left: 1rem;
-            position: relative;
-        }
-
-        .message-sources li:before {
-            content: "•";
-            position: absolute;
-            left: 0;
-        }
-
-        .query-type {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.625rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-        }
-
-        .message.user .query-type {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .message.assistant .query-type {
-            background: #e5e7eb;
-            color: #6b7280;
-        }
-
-        .chat-input-container {
-            padding: 1.5rem;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 0.875rem 1.25rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .chat-input:focus {
-            border-color: #667eea;
-        }
-
-        .send-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 0.875rem 1.5rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .send-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .send-button:active {
-            transform: translateY(0);
-        }
-
-        .send-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .clear-button {
-            background: #f3f4f6;
-            color: #6b7280;
-            border: none;
-            padding: 0.875rem 1rem;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .clear-button:hover {
-            background: #e5e7eb;
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #6b7280;
-            font-size: 0.875rem;
-        }
-
-        .loading-dots {
-            display: flex;
-            gap: 0.25rem;
-        }
-
-        .loading-dots span {
-            width: 8px;
-            height: 8px;
-            background: #667eea;
-            border-radius: 50%;
-            animation: pulse 1.4s infinite ease-in-out both;
-        }
-
-        .loading-dots span:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .loading-dots span:nth-child(2) {
-            animation-delay: -0.16s;
-        }
-
-        @keyframes pulse {
-            0%, 80%, 100% {
-                transform: scale(0);
-                opacity: 0.5;
-            }
-            40% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .footer {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 1.5rem 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            text-align: center;
-            color: white;
-        }
-
-        .footer-content p {
-            margin-bottom: 0.5rem;
-        }
-
-        .footer-content a {
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .footer-content a:hover {
-            text-decoration: underline;
-        }
-
-        .emoji {
-            display: inline-block;
-        }
-
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .chat-container {
-                height: 80vh;
-            }
-
-            .message {
-                max-width: 90%;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#030303">
+<title>SBP Monetary Policy RAG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030303;--surface:#0f0f0f;--border:#333;--soft:#151515;--text:#f2f2f2;--muted:#666;--muted2:#8a8a8a;--primary:#0d7ff2;--red:#ff4d4d}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:"Space Grotesk",sans-serif}body{min-height:100vh;overflow:hidden}button,input{font:inherit}button{border:0}::selection{background:var(--primary);color:#fff}::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border)}.hidden{display:none!important}.mono{font-family:"JetBrains Mono",monospace}.heading{font-family:"Oswald",sans-serif}.app{min-height:100vh;position:relative;background:radial-gradient(circle at 50% 45%,rgba(13,127,242,.04),transparent 30%),var(--bg)}.noise{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.045;background-image:radial-gradient(rgba(255,255,255,.6) .5px,transparent .5px);background-size:4px 4px}
+/* Initial state */
+.initial{min-height:100vh;display:grid;grid-template-columns:1fr minmax(340px,2fr) 1fr;grid-template-rows:1fr auto 1fr;position:relative;z-index:1}.cell{border-color:#171717}.title-cell{grid-column:1;grid-row:1;padding:34px;border-right:1px solid #171717;border-bottom:1px solid #171717}.title-cell h1{margin:0;font:500 clamp(2rem,4vw,4rem)/.94 Oswald,sans-serif;letter-spacing:.08em;text-transform:uppercase}.sub{margin-top:18px;color:var(--muted);font:11px/1.7 "JetBrains Mono",monospace;text-transform:uppercase;letter-spacing:.08em}.standby{grid-column:3;grid-row:1;padding:34px;border-left:1px solid #171717;border-bottom:1px solid #171717;display:flex;justify-content:flex-end;align-items:flex-start}.status{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font:10px "JetBrains Mono",monospace;text-transform:uppercase;letter-spacing:.08em}.status-dot{width:7px;height:7px;border-radius:50%;background:#333;animation:pulse 1.8s infinite}@keyframes pulse{50%{opacity:.35;transform:scale(.9)}}.initial-center{grid-column:2;grid-row:2;padding:28px;display:flex;align-items:center;justify-content:center}.query-shell{width:min(720px,100%);position:relative}.query-shell:before{content:"";position:absolute;inset:-28px;border:1px solid #121212;pointer-events:none}.query-wrap{display:flex;border:1px solid var(--border);background:var(--surface);transition:.2s}.query-wrap:focus-within{border-color:#fff;box-shadow:0 0 18px rgba(255,255,255,.12)}.query-input{flex:1;min-width:0;height:62px;padding:0 20px;background:transparent;border:0;outline:0;color:#fff;font:14px "JetBrains Mono",monospace}.query-input::placeholder{color:#5f5f5f}.query-send{width:60px;background:transparent;color:var(--muted);cursor:pointer}.query-send:hover{color:#fff;background:rgba(13,127,242,.1)}.initial-footer{grid-column:3;grid-row:3;align-self:end;padding:34px;border-left:1px solid #171717;text-align:right;color:var(--muted);font:12px "JetBrains Mono",monospace}.initial-footer a{color:inherit;text-decoration:none}.initial-footer a:hover{color:#fff}
+/* Active state */
+.active{height:100vh;display:flex;flex-direction:column;position:relative;z-index:1}.topbar{height:60px;flex:0 0 60px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:var(--surface);z-index:10}.brand{display:flex;align-items:center;gap:12px}.back{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--muted);cursor:pointer}.back:hover{color:#fff}.brand-title{margin:0;font:500 17px Oswald,sans-serif;letter-spacing:.08em;text-transform:uppercase}.live{display:flex;align-items:center;gap:8px;color:var(--primary);font:10px "JetBrains Mono",monospace;text-transform:uppercase}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);box-shadow:0 0 10px rgba(13,127,242,.65)}.active-main{min-height:0;flex:1;display:flex}.chat-panel{width:70%;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--border);position:relative}.mobile-sources{display:none}.chat-scroll{flex:1;overflow-y:auto;padding:28px 34px 140px}.msg{display:flex;width:100%;margin-bottom:24px;animation:in .24s ease-out}@keyframes in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}.msg.user{justify-content:flex-end}.msg-inner{max-width:85%}.msg.user .msg-inner{max-width:72%}.meta{display:flex;align-items:center;gap:7px;margin-bottom:6px}.msg.user .meta{justify-content:flex-end}.meta-time,.meta-name{color:var(--muted);font:10px "JetBrains Mono",monospace;text-transform:uppercase}.meta-name.bot{color:var(--primary)}.card{background:var(--surface);border:1px solid var(--border);padding:16px 18px;font-size:14px;line-height:1.75;word-break:break-word}.msg.user .card{background:#0b0b0b}.card p{margin:0 0 12px}.card p:last-child{margin-bottom:0}.card ul{margin:8px 0 0;padding-left:20px}.card strong{color:#fff}.badge{display:inline-block;margin-bottom:10px;padding:3px 6px;border:1px solid rgba(13,127,242,.35);background:rgba(13,127,242,.08);color:var(--primary);font:600 9px "JetBrains Mono",monospace;text-transform:uppercase}.sources-inline{margin-top:15px;padding-top:13px;border-top:1px solid var(--border)}.sources-title{margin-bottom:7px;color:var(--muted2);font:9px "JetBrains Mono",monospace;text-transform:uppercase}.sources-inline a,.sources-inline span{display:block;color:var(--muted2);text-decoration:none;font:10px/1.55 "JetBrains Mono",monospace;margin:3px 0}.sources-inline a:hover{color:#fff}.processing{opacity:.72}.processing-card{background:var(--bg);border:1px solid var(--border);padding:12px;color:var(--muted);font:10px/1.8 "JetBrains Mono",monospace;position:relative;overflow:hidden}.processing-card:before{content:"";position:absolute;top:0;left:-30%;width:30%;height:1px;background:linear-gradient(90deg,transparent,var(--primary),transparent);animation:scan 1.7s linear infinite}@keyframes scan{to{left:110%}}.composer{position:absolute;left:0;bottom:0;width:100%;padding:14px 18px;border-top:1px solid var(--border);background:rgba(3,3,3,.97);z-index:5}.composer-inner{max-width:900px;margin:auto;display:flex;border:1px solid var(--border);background:var(--surface)}.composer-input{flex:1;min-width:0;height:48px;padding:0 14px;border:0;outline:0;background:transparent;color:#fff;font:12px "JetBrains Mono",monospace}.composer-input::placeholder{color:var(--muted)}.send{width:52px;background:transparent;color:var(--muted);cursor:pointer}.send:hover{color:#fff}.send:disabled{opacity:.5;cursor:not-allowed}.composer-actions{max-width:900px;margin:7px auto 0;display:flex;justify-content:space-between;align-items:center}.clear{display:flex;align-items:center;gap:6px;color:var(--muted);background:transparent;cursor:pointer;font:9px "JetBrains Mono",monospace;text-transform:uppercase}.clear:hover{color:#fff}.hint{color:#555;font:9px "JetBrains Mono",monospace}.error{max-width:900px;margin:8px auto 0;padding:8px 10px;border:1px solid rgba(255,77,77,.5);background:rgba(255,77,77,.06);color:#ff7777;font:9px/1.5 "JetBrains Mono",monospace}.context{width:30%;min-width:280px;display:flex;flex-direction:column;background:var(--bg)}.context-title{height:60px;flex:0 0 60px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 20px}.context-title h2{margin:0;display:flex;gap:8px;align-items:center;color:var(--muted);font:500 12px Oswald,sans-serif;text-transform:uppercase;letter-spacing:.1em}.context-scroll{flex:1;overflow-y:auto;padding:14px}.source-card{background:var(--surface);border:1px solid var(--border);padding:12px;margin-bottom:10px;transition:.2s}.source-card:hover{transform:translateY(-2px);border-color:var(--primary);box-shadow:0 0 15px rgba(13,127,242,.15)}.source-top{display:flex;justify-content:space-between;gap:10px}.source-index{color:var(--primary);font:10px "JetBrains Mono",monospace;word-break:break-all}.source-score{padding:2px 5px;border:1px solid rgba(13,127,242,.35);color:var(--primary);font:8px "JetBrains Mono",monospace}.source-name{margin-top:8px;color:var(--muted2);font-size:10px;line-height:1.5}.empty{padding:14px 4px;color:#454545;font:10px/1.7 "JetBrains Mono",monospace}.context-footer{padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);text-align:right}.context-footer a{color:var(--muted);text-decoration:none;font:10px "JetBrains Mono",monospace}.context-footer a:hover{color:#fff}.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,15px);padding:10px 14px;background:#111;border:1px solid var(--border);color:#fff;font:10px "JetBrains Mono",monospace;opacity:0;pointer-events:none;transition:.2s;z-index:100}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:900px){body{overflow:auto}.initial{display:flex;flex-direction:column;min-height:100vh}.title-cell{padding:24px;border-right:0}.standby{order:2;padding:14px 24px;border:0;justify-content:flex-start}.initial-center{order:3;flex:1;padding:26px 22px}.initial-footer{order:4;border-left:0;border-top:1px solid #171717;padding:18px 24px;text-align:left}.query-shell:before{inset:-12px}.chat-panel{width:100%;border-right:0}.context{position:fixed;inset:60px 0 0;width:100%;min-width:0;z-index:30;transform:translateY(100%);transition:transform .25s}.context.open{transform:translateY(0)}.mobile-sources{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--border);background:var(--surface);color:var(--muted);font:500 13px Oswald,sans-serif;text-transform:uppercase}.chat-scroll{padding:18px 14px 130px}.msg-inner,.msg.user .msg-inner{max-width:92%}.live{display:none}}
+@media(max-width:600px){.brand-title{font-size:14px}.composer{padding:10px}.hint{display:none}.initial-title h1{font-size:2.2rem}}
+</style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <div class="logo">
-                <div class="logo-icon">🏦</div>
-                <div class="logo-text">
-                    <h1>SBP Monetary Policy RAG Chatbot</h1>
-                    <p>State Bank of Pakistan - August 2026 Report</p>
-                </div>
-            </div>
-            <div class="made-with-love">
-                Made with ❤️ by Muhammad Adeel Ai
-            </div>
-        </div>
-    </div>
+<div class="app"><div class="noise"></div>
+<section id="initialState" class="initial">
+  <div class="title-cell cell"><h1>SBP Monetary<br>Policy RAG</h1><div class="sub">State Bank of Pakistan<br>Retrieval Augmented Intelligence</div></div>
+  <div class="standby cell"><div class="status"><span class="status-dot"></span>System Standby</div></div>
+  <div class="initial-center cell">
+    <form id="initialForm" class="query-shell">
+      <div class="query-wrap"><input id="initialInput" class="query-input" type="text" placeholder="QUERY SBP CORPUS..." autocomplete="off" spellcheck="false"><button class="query-send" type="submit" aria-label="Send"><span class="material-symbols-outlined">arrow_upward</span></button></div>
+      <div class="mono" style="font-size:9px;color:#555;margin-top:10px;text-transform:uppercase;letter-spacing:.08em">Press Enter to Query</div>
+    </form>
+  </div>
+  <div class="initial-footer cell">Made with love ❤️ <a href="https://www.linkedin.com/in/muhammadadeelai/" target="_blank" rel="noopener noreferrer">@muhammadadeelai</a></div>
+</section>
 
-    <div class="main-container">
-        <div class="chat-container">
-            <div class="chat-header">
-                <h2>Ask about Pakistan's Monetary Policy</h2>
-                <p>Powered by Advanced RAG with Docling, Cohere, Qdrant & Groq</p>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                <div class="message assistant">
-                    <span class="query-type">System</span>
-                    Hello! I'm your AI assistant for the State Bank of Pakistan's Monetary Policy Report (August 2026). Ask me anything about inflation projections, GDP growth, monetary policy decisions, or any other aspects of the report.
-                </div>
-            </div>
-            <div class="chat-input-container">
-                <button class="clear-button" onclick="clearHistory()">Clear</button>
-                <input type="text" class="chat-input" id="chatInput" placeholder="Ask a question about the monetary policy..." onkeypress="handleKeyPress(event)">
-                <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
-            </div>
-        </div>
-    </div>
+<section id="activeState" class="active hidden">
+  <header class="topbar"><div class="brand"><button id="backButton" class="back" type="button" title="Back"><span class="material-symbols-outlined">arrow_back</span></button><h1 class="brand-title">SBP Monetary Policy RAG</h1></div><div class="live"><span class="live-dot"></span>System Online</div></header>
+  <main class="active-main">
+    <section class="chat-panel">
+      <button id="mobileSources" class="mobile-sources" type="button"><span id="mobileSourcesLabel">View Sources</span><span class="material-symbols-outlined">keyboard_arrow_up</span></button>
+      <div id="chatScroll" class="chat-scroll"><div id="messages"></div></div>
+      <div class="composer">
+        <form id="chatForm" class="composer-inner"><input id="chatInput" class="composer-input" type="text" placeholder="QUERY SBP CORPUS..." autocomplete="off" spellcheck="false"><button id="sendButton" class="send" type="submit" title="Send"><span class="material-symbols-outlined">send</span></button></form>
+        <div class="composer-actions"><button id="clearButton" class="clear" type="button"><span class="material-symbols-outlined" style="font-size:14px">delete_sweep</span>Clear History</button><div class="hint">ENTER TO SEND</div></div>
+        <div id="errorBox" class="error hidden"></div>
+      </div>
+    </section>
+    <aside id="contextPanel" class="context">
+      <div class="context-title"><h2><span class="material-symbols-outlined" style="font-size:17px">library_books</span>Active Context</h2></div>
+      <div id="contextScroll" class="context-scroll"><div id="contextMeta" class="empty">Ask a question to load retrieved sources here.</div></div>
+      <div class="context-footer"><a href="https://www.linkedin.com/in/muhammadadeelai/" target="_blank" rel="noopener noreferrer">Made with love ❤️ @muhammadadeelai</a></div>
+    </aside>
+  </main>
+</section>
+<div id="toast" class="toast"></div>
+</div>
+<script>
+(() => {
+  "use strict";
+  /* EXACT backend URL -- avoids the previous //chat 404 */
+  const API_BASE = "https://sbp-mpr.onrender.com";
+  const CHAT_URL = API_BASE + "/chat";
+  const CLEAR_URL = API_BASE + "/clear-history";
+  const SESSION_KEY = "sbp_mpr_session_id";
 
-    <div class="footer">
-        <div class="footer-content">
-            <p>Made with ❤️ by <a href="https://www.linkedin.com/in/muhammadadeelai/" target="_blank" rel="noopener noreferrer">@muhammadadeelai</a></p>
-            <p>Built with FastAPI, Docling, Cohere, Qdrant, Groq & LangChain</p>
-        </div>
-    </div>
+  const $ = id => document.getElementById(id);
+  const initialState = $("initialState"), activeState = $("activeState"), initialInput = $("initialInput"), chatInput = $("chatInput");
+  const messages = $("messages"), chatScroll = $("chatScroll"), contextMeta = $("contextMeta"), contextPanel = $("contextPanel");
+  const sendButton = $("sendButton"), errorBox = $("errorBox"), toast = $("toast");
 
-    <script>
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:8000'
-            : 'https://sbp-mpr.onrender.com';
-        let isLoading = false;
-        const SESSION_ID_KEY = 'sbp_mpr_session_id';
-        const sessionId = getOrCreateSessionId();
+  let sessionId = localStorage.getItem(SESSION_KEY);
+  if (!sessionId) {
+    sessionId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : "web-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+    localStorage.setItem(SESSION_KEY, sessionId);
+  }
+  let loading = false;
 
-        function getOrCreateSessionId() {
-            try {
-                const existing = localStorage.getItem(SESSION_ID_KEY);
-                if (existing) return existing;
+  const escapeHtml = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  const timeNow = () => new Intl.DateTimeFormat([], {hour:"2-digit",minute:"2-digit",hour12:true}).format(new Date());
+  const scrollBottom = () => requestAnimationFrame(() => chatScroll.scrollTop = chatScroll.scrollHeight);
+  function toastMsg(msg){ toast.textContent=msg; toast.classList.add("show"); clearTimeout(toastMsg.t); toastMsg.t=setTimeout(()=>toast.classList.remove("show"),2200); }
+  function showError(msg){ errorBox.textContent=msg; errorBox.classList.remove("hidden"); }
+  function hideError(){ errorBox.textContent=""; errorBox.classList.add("hidden"); }
+  function formatAnswer(value){
+    const safe = escapeHtml(value);
+    const lines = safe.split(/\r?\n/); let out="", list=false;
+    for(const raw of lines){ const line=raw.trim();
+      if(/^[-*]\s+/.test(line)){ if(!list){out+="<ul>";list=true;} out += "<li>" + line.replace(/^[-*]\s+/,"") + "</li>"; continue; }
+      if(list){out+="</ul>";list=false;} if(!line){out+='<div style="height:7px"></div>';continue;}
+      out += "<p>" + line.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>") + "</p>";
+    }
+    if(list) out+="</ul>"; return out;
+  }
+  function switchActive(){ initialState.classList.add("hidden"); activeState.classList.remove("hidden"); setTimeout(()=>chatInput.focus(),100); }
+  function switchInitial(){ activeState.classList.add("hidden"); initialState.classList.remove("hidden"); setTimeout(()=>initialInput.focus(),100); }
 
-                const id = (window.crypto && crypto.randomUUID)
-                    ? crypto.randomUUID()
-                    : 'web-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  function addUser(text){
+    const el=document.createElement("div"); el.className="msg user";
+    el.innerHTML=`<div class="msg-inner"><div class="meta"><span class="meta-time">USER // ${escapeHtml(timeNow())}</span><span class="material-symbols-outlined" style="font-size:15px;color:#666">account_circle</span></div><div class="card">${escapeHtml(text)}</div></div>`;
+    messages.appendChild(el); scrollBottom();
+  }
+  function addProcessing(){
+    const el=document.createElement("div"); el.className="msg processing"; el.dataset.loading="1";
+    el.innerHTML=`<div class="msg-inner"><div class="meta"><span class="material-symbols-outlined" style="font-size:15px;color:#0d7ff2">memory</span><span class="meta-name bot">SBP BOT // ${escapeHtml(timeNow())}</span></div><div class="processing-card"><div><span style="color:#0d7ff2">&gt;</span> RECEIVING QUERY...</div><div><span style="color:#0d7ff2">&gt;</span> SEARCHING SBP CORPUS...</div><div><span style="color:#0d7ff2">&gt;</span> RETRIEVING RELEVANT CONTEXT...</div><div><span style="color:#0d7ff2">&gt;</span> GENERATING ANSWER_</div></div></div>`;
+    messages.appendChild(el); scrollBottom(); return el;
+  }
+  function addAssistant(answer,sources,queryType){
+    const list=Array.isArray(sources)?sources:[]; const el=document.createElement("div"); el.className="msg";
+    const srcHtml=list.length?`<div class="sources-inline"><div class="sources-title">Retrieved Sources</div>${list.map((s,i)=>{const t=String(s??"");const safe=escapeHtml(t);return /^https?:\/\//i.test(t)?`<a href="${safe}" target="_blank" rel="noopener noreferrer">[${i+1}] ${safe}</a>`:`<span>[${i+1}] ${safe}</span>`}).join("")}</div>`:"";
+    el.innerHTML=`<div class="msg-inner"><div class="meta"><span class="material-symbols-outlined" style="font-size:15px;color:#0d7ff2">memory</span><span class="meta-name bot">SBP BOT // ${escapeHtml(timeNow())}</span></div><div class="card"><span class="badge">${escapeHtml(queryType||"RAG")}</span><div>${formatAnswer(answer||"No answer returned by the backend.")}</div>${srcHtml}</div></div>`;
+    messages.appendChild(el); renderContext(list,queryType); scrollBottom();
+  }
+  function renderContext(sources,queryType){
+    if(!sources.length){ contextMeta.innerHTML=`<div class="empty">No sources returned.<br><br>Query type: ${escapeHtml(queryType||"RAG")}</div>`; $("mobileSourcesLabel").textContent="View Sources (0)"; return; }
+    contextMeta.innerHTML=sources.map((s,i)=>{const t=String(s??"");const safe=escapeHtml(t);const parts=t.split("/");const title=escapeHtml(parts[parts.length-1]||t);return `<div class="source-card"><div class="source-top"><span class="source-index">[${i+1}] ${title}</span><span class="source-score">SOURCE</span></div><div class="source-name">${safe}</div></div>`}).join("");
+    $("mobileSourcesLabel").textContent=`View Sources (${sources.length})`;
+  }
+  async function request(url,opts={},ms=90000){
+    const c=new AbortController(),timer=setTimeout(()=>c.abort(),ms); try{return await fetch(url,{...opts,signal:c.signal})}finally{clearTimeout(timer)}
+  }
+  async function sendMessage(value){
+    const question=String(value||"").trim(); if(!question||loading)return;
+    loading=true; hideError(); sendButton.disabled=true; addUser(question); const p=addProcessing();
+    try{
+      const res=await request(CHAT_URL,{method:"POST",headers:{"Accept":"application/json","Content-Type":"application/json"},body:JSON.stringify({question,session_id:sessionId})});
+      let data={}; try{data=await res.json()}catch(_){data={detail:await res.text()};}
+      p.remove();
+      if(!res.ok){let d=data?.detail;if(Array.isArray(d))d=d.map(x=>x?.msg||x).join("; ");throw new Error(`API ${res.status}: ${d||res.statusText||"Request failed"}`)}
+      addAssistant(data.answer,data.sources,data.query_type);
+    }catch(e){p.remove();showError(e?.name==="AbortError"?"The Render backend took too long to respond. It may be waking up; try again.":(e?.message||"Unable to reach the chatbot backend."));toastMsg("Request failed");}
+    finally{loading=false;sendButton.disabled=false;chatInput.focus();}
+  }
+  async function clearHistory(){
+    if(loading){toastMsg("Wait for the current request to finish.");return;} hideError();
+    try{const res=await request(CLEAR_URL,{method:"POST",headers:{"Accept":"application/json"}},30000);if(!res.ok)throw new Error(`API ${res.status}: ${res.statusText}`);messages.innerHTML="";contextMeta.innerHTML='<div class="empty">Conversation cleared.<br><br>Ask a new question to load retrieved SBP sources.</div>';$('mobileSourcesLabel').textContent="View Sources";toastMsg("History cleared");chatInput.focus();}
+    catch(e){showError(e?.message||"Could not clear history.");toastMsg("Clear failed");}
+  }
 
-                localStorage.setItem(SESSION_ID_KEY, id);
-                return id;
-            } catch (error) {
-                return 'web-' + Date.now();
-            }
-        }
-
-        function escapeHtml(value) {
-            return String(value ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/\"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !isLoading) {
-                sendMessage();
-            }
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (!message || isLoading) return;
-
-            isLoading = true;
-            document.getElementById('sendButton').disabled = true;
-            input.value = '';
-
-            // Add user message
-            addMessage(message, 'user');
-
-            // Add loading indicator
-            const loadingId = addLoadingMessage();
-
-            try {
-                const response = await fetch(new URL('/chat', API_URL).toString(), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        question: message,
-                        session_id: sessionId
-                    }),
-                });
-
-                if (!response.ok) {
-                    let errorDetails = '';
-                    try {
-                        const errorData = await response.json();
-                        errorDetails = errorData.detail ? JSON.stringify(errorData.detail) : JSON.stringify(errorData);
-                    } catch (_) {
-                        errorDetails = await response.text().catch(() => '');
-                    }
-                    throw new Error(`HTTP ${response.status}${errorDetails ? ': ' + errorDetails : ''}`);
-                }
-
-                const data = await response.json();
-                
-                // Remove loading indicator
-                removeMessage(loadingId);
-
-                // Add assistant response
-                addAssistantMessage(
-                    data.answer || 'No answer was returned by the API.',
-                    Array.isArray(data.sources) ? data.sources : [],
-                    data.query_type || 'RAG'
-                );
-
-            } catch (error) {
-                removeMessage(loadingId);
-                addMessage(
-                    `Sorry, I could not get a response from the backend. ${error.message}`,
-                    'assistant'
-                );
-                console.error('Chat request failed:', error);
-            } finally {
-                isLoading = false;
-                document.getElementById('sendButton').disabled = false;
-                input.focus();
-            }
-        }
-
-        function addMessage(content, type) {
-            const messagesContainer = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            messageDiv.textContent = content;
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            return messageDiv.id = 'msg-' + Date.now();
-        }
-
-        function addAssistantMessage(content, sources, queryType) {
-            const messagesContainer = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message assistant';
-            
-            let html = `<span class="query-type">${escapeHtml(queryType)}</span>`;
-            html += `<div>${escapeHtml(content).replace(/\n/g, '<br>')}</div>`;
-            
-            if (sources && sources.length > 0) {
-                html += '<div class="message-sources">';
-                html += '<strong>Sources:</strong>';
-                html += '<ul>';
-                sources.forEach(source => {
-                    const text = String(source ?? '');
-                    const safe = escapeHtml(text);
-                    const hrefMatch = text.match(/^https?:\/\/\S+$/i);
-                    html += hrefMatch
-                        ? `<li><a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a></li>`
-                        : `<li>${safe}</li>`;
-                });
-                html += '</ul></div>';
-            }
-            
-            messageDiv.innerHTML = html;
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function addLoadingMessage() {
-            const messagesContainer = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message assistant';
-            messageDiv.innerHTML = `
-                <div class="loading">
-                    <div class="loading-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                    Thinking...
-                </div>
-            `;
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            return messageDiv.id = 'loading-' + Date.now();
-        }
-
-        function removeMessage(id) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.remove();
-            }
-        }
-
-        async function clearHistory() {
-            try {
-                const response = await fetch(new URL('/clear-history', API_URL).toString(), {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const messagesContainer = document.getElementById('chatMessages');
-                messagesContainer.innerHTML = `
-                    <div class="message assistant">
-                        <span class="query-type">System</span>
-                        Chat history cleared. How can I help you with the Monetary Policy Report?
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Failed to clear history:', error);
-            }
-        }
-
-        // Focus input on load
-        document.getElementById('chatInput').focus();
-    </script>
+  $("initialForm").addEventListener("submit",e=>{e.preventDefault();const q=initialInput.value.trim();if(!q)return;initialInput.value="";switchActive();sendMessage(q)});
+  $("chatForm").addEventListener("submit",e=>{e.preventDefault();const q=chatInput.value.trim();if(!q)return;chatInput.value="";sendMessage(q)});
+  chatInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("chatForm").requestSubmit()}});
+  $("clearButton").addEventListener("click",clearHistory);
+  $("backButton").addEventListener("click",()=>{if(loading){toastMsg("Finish the current request first.");return}switchInitial()});
+  $("mobileSources").addEventListener("click",()=>contextPanel.classList.toggle("open"));
+  window.addEventListener("load",()=>setTimeout(()=>initialInput.focus(),250));
+})();
+</script>
 </body>
 </html>
