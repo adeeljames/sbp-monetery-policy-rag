@@ -33,7 +33,7 @@ if not all([GROQ_API_KEY, COHERE_API_KEY, QDRANT_API_KEY, QDRANT_URL]):
 # Initialize models
 dense_embeddings = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key=COHERE_API_KEY)
 sparse_embeddings = FastEmbedSparse(model_name="Qdrant/bm25")
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, api_key=GROQ_API_KEY)
+llm = ChatGroq(model="gpt-oss-120b", temperature=0, api_key=GROQ_API_KEY)
 co = cohere.Client(COHERE_API_KEY)
 
 # Connect to existing Qdrant collection
