@@ -137,7 +137,10 @@ async def chat(request: QuestionRequest):
         recent_history = format_recent_history()
         
         prompt = f"""You are a helpful assistant answering questions about the State Bank of Pakistan's Monetary Policy Report.
-Use ONLY the context below to answer. If the answer isn't in the context, say you don't know.
+
+If the question is a greeting or general conversational remark (like "hi", "hello", "how are you", "thanks"), respond briefly and politely, and mention that you're here to help answer questions about the report.
+
+For questions about the report itself, use ONLY the context below to answer. If the answer isn't in the context, say you don't know — don't make things up.
 
 Recent conversation:
 {recent_history}
